@@ -77,7 +77,7 @@ UploadImg.prototype = {
     },
 
     // 上传图片
-    uploadImg: function (files) {
+    uploadImg: async function (files) {
         if (!files || !files.length) {
             return
         }
@@ -154,6 +154,16 @@ UploadImg.prototype = {
             return
         }
 
+        if (hooks.before && typeof hooks.before === 'function') {
+            var beforeResult = await hooks.before(xhr, editor, resultFiles);
+            if (beforeResult && (typeof beforeResult === 'undefined' ? 'undefined' : _typeof(beforeResult)) === 'object') {
+                if (beforeResult.prevent) {
+                    // 如果返回的结果是 {prevent: true, msg: 'xxxx'} 则表示用户放弃上传
+                    this._alert(beforeResult.msg);
+                    return;
+                }
+            }
+        }
         // 添加图片数据
         const formdata = new FormData()
         arrForEach(resultFiles, file => {
@@ -273,17 +283,17 @@ UploadImg.prototype = {
                 }
             }
 
-            // hook - before
-            if (hooks.before && typeof hooks.before === 'function') {
-                const beforeResult = hooks.before(xhr, editor, resultFiles)
-                if (beforeResult && typeof beforeResult === 'object') {
-                    if (beforeResult.prevent) {
-                        // 如果返回的结果是 {prevent: true, msg: 'xxxx'} 则表示用户放弃上传
-                        this._alert(beforeResult.msg)
-                        return
-                    }
-                }
-            }
+//             // hook - before
+//             if (hooks.before && typeof hooks.before === 'function') {
+//                 const beforeResult = hooks.before(xhr, editor, resultFiles)
+//                 if (beforeResult && typeof beforeResult === 'object') {
+//                     if (beforeResult.prevent) {
+//                         // 如果返回的结果是 {prevent: true, msg: 'xxxx'} 则表示用户放弃上传
+//                         this._alert(beforeResult.msg)
+//                         return
+//                     }
+//                 }
+//             }
 
             // 自定义 headers
             objForEach(uploadImgHeaders, (key, val) => {
